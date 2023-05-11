@@ -11,8 +11,6 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONF_MQTT_IN,
-    CONF_MQTT_OUT,
     DEFAULT_CLIENT_ID,
     DEFAULT_NAME,
     DOMAIN,
@@ -32,8 +30,6 @@ class HisenseTvFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._mac = None
         self._name = None
-        self._mqtt_in = None
-        self._mqtt_out = None
         self._unsubscribe_auth = None
         self._unsubscribe_sourcelist = None
 
@@ -92,9 +88,7 @@ class HisenseTvFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                         vol.Required(CONF_MAC): str,
-                        vol.Optional(CONF_IP_ADDRESS): str,
-                        vol.Optional(CONF_MQTT_IN): str,
-                        vol.Optional(CONF_MQTT_OUT): str,
+                        vol.Optional(CONF_IP_ADDRESS): str
                     }
                 ),
             )
@@ -103,9 +97,7 @@ class HisenseTvFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.task_mqtt = {
             CONF_MAC: user_input.get(CONF_MAC),
             CONF_NAME: user_input.get(CONF_NAME),
-            CONF_IP_ADDRESS: user_input.get(CONF_IP_ADDRESS),
-            CONF_MQTT_IN: user_input.get(CONF_MQTT_IN),
-            CONF_MQTT_OUT: user_input.get(CONF_MQTT_OUT),
+            CONF_IP_ADDRESS: user_input.get(CONF_IP_ADDRESS)
         }
 
         await self._check_authentication(client_id=DEFAULT_CLIENT_ID)
@@ -118,28 +110,28 @@ class HisenseTvFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _check_authentication(self, client_id):
         self._unsubscribe_auth = await mqtt.async_subscribe(
             hass=self.hass,
-            topic="%s/remoteapp/mobile/%s/ui_service/data/authentication"
-            % (self.task_mqtt.get(CONF_MQTT_IN), client_id),
+            topic="/remoteapp/mobile/%s/ui_service/data/authentication"
+            % (client_id),
             msg_callback=self._async_pin_needed,
         )
         self._unsubscribe_sourcelist = await mqtt.async_subscribe(
             hass=self.hass,
-            topic="%s/remoteapp/mobile/%s/ui_service/data/sourcelist"
-            % (self.task_mqtt.get(CONF_MQTT_IN), client_id),
+            topic="/remoteapp/mobile/%s/ui_service/data/sourcelist"
+            % (client_id),
             msg_callback=self._async_pin_not_needed,
         )
         _LOGGER.debug("_check_authentication - publish gettvstate")
         mqtt.publish(
             hass=self.hass,
-            topic="%s/remoteapp/tv/ui_service/%s/actions/gettvstate"
-            % (self.task_mqtt.get(CONF_MQTT_OUT), client_id),
+            topic="/remoteapp/tv/ui_service/%s/actions/gettvstate"
+            % (client_id),
             payload="",
         )
         _LOGGER.debug("_check_authentication - publish sourcelist")
         mqtt.publish(
             hass=self.hass,
-            topic="%s/remoteapp/tv/ui_service/%s/actions/sourcelist"
-            % (self.task_mqtt.get(CONF_MQTT_OUT), client_id),
+            topic="/remoteapp/tv/ui_service/%s/actions/sourcelist"
+            % (client_id),
             payload="",
         )
 
@@ -175,15 +167,15 @@ class HisenseTvFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client_id = DEFAULT_CLIENT_ID
             self._unsubscribe_auth = await mqtt.async_subscribe(
                 hass=self.hass,
-                topic="%s/remoteapp/mobile/%s/ui_service/data/authenticationcode"
-                % (self.task_mqtt.get(CONF_MQTT_IN), client_id),
+                topic="/remoteapp/mobile/%s/ui_service/data/authenticationcode"
+                % (client_id),
                 msg_callback=self._async_authcode_response,
             )
             payload = json.dumps({"authNum": user_input.get(CONF_PIN)})
             mqtt.publish(
                 hass=self.hass,
-                topic="%s/remoteapp/tv/ui_service/%s/actions/authenticationcode"
-                % (self.task_mqtt.get(CONF_MQTT_OUT), client_id),
+                topic="/remoteapp/tv/ui_service/%s/actions/authenticationcode"
+                % (client_id),
                 payload=payload,
             )
             return self.async_show_progress(
