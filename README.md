@@ -27,56 +27,15 @@ The TV provides a MQTT broker on port `36669`. Home Assistant can only communica
 
 ## MQTT
 
-The MQTT broker is secured by credentials. Some TVs (like mine) even require client certificates for incomming connections. I won't include them in this repo, but you can find them online or extract them yourself. See [Acknowledgment](https://github.com/sehaas/ha_hisense_tv#acknowledgment).
+Implementation of direct mqtt connection to Hisense MQTT Broker. I've created a seperate HomeAssistant instance because I wasn't able to get the mosquitto mqtt bridge working
 
 Connection shema:
 ```
-+-----------+          +-----------+
-| Home      |  client  | Mosquitto |
-| Assistant |--------->|           |
-+-----------+          +-----------+
-                            /\
-                     bridge ||
-                            \/
-                      +-------------+
-                      | Hisense TV  |
-                      | MQTT Broker |
-                      +-------------+
++-----------+          +-------------+
+| Home      |  client  | Hisense TV  |
+| Assistant |--------->| MQTT Broker |
++-----------+          +-------------+
 ```
-
-The `mosquitto` bridge configuration using client certificates.
-
-```
-connection hisense
-address <TV_IP_ADDRESS>:36669
-username <HISENSE_MQTT_USERNAME>
-password  <HISENSE_MQTT_PASSWORD>
-clientid HomeAssistant
-bridge_tls_version tlsv1.2
-bridge_cafile hisense_ca.pem
-bridge_certfile hisense_client.pem
-bridge_keyfile hisense_client.key
-bridge_insecure true
-start_type automatic
-try_private true
-topic /remoteapp/# both 0 <MQTT_PREFIX> ""
-```
-Replace `<TV_IP_ADDRESS>`, credentials and `<MQTT_PREFIX>` according to your setup. The `<MQTT_PREFIX>` is needed if you have multiple TVs, otherwise you should just use the default `hisense`:
-```
-topic /remoteapp/# both 0 hisense ""
-```
-
-(Optional) If you have multiple TVs you have to replicate the whole configuration for each TV.
-The `<MQTT_PREFIX>` must be unique for every TV. For example:
-```
-topic /remoteapp/# both 0 livingroom_tv ""
-```
-```
-topic /remoteapp/# both 0 kids_tv ""
-```
-
-(Optional) This setup uses the same prefix for incoming and outgoing messages. The integration supports separated values. You have to adapt the topic setup accordingly.
-
 ## Wake-on-LAN
 
 The TV can be turned on by a Wake-on-LAN packet. The MAC address must be configured during integration setup.
@@ -93,6 +52,7 @@ The
 # Acknowledgment
 Everything I needed to write this integration could be gathered from these sources. Information about the MQTT topics, credentials or certificates can be found there.
 
+* [@sehaas](https://github.com/sehaas/ha_hisense_tv)
 * [@Krazy998's mqtt-hisensetv](https://github.com/Krazy998/mqtt-hisensetv)
 * [@newAM's hisensetv_hass](https://github.com/newAM/hisensetv_hass)
 * [HA Community](https://community.home-assistant.io/t/hisense-tv-control/97638/1)
