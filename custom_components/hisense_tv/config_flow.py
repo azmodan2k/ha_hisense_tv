@@ -14,7 +14,6 @@ from .const import (
     CONF_MQTT_IN,
     CONF_MQTT_OUT,
     DEFAULT_CLIENT_ID,
-    DEFAULT_MQTT_PREFIX,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -94,8 +93,8 @@ class HisenseTvFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                         vol.Required(CONF_MAC): str,
                         vol.Optional(CONF_IP_ADDRESS): str,
-                        vol.Optional(CONF_MQTT_IN, default=DEFAULT_MQTT_PREFIX): str,
-                        vol.Optional(CONF_MQTT_OUT, default=DEFAULT_MQTT_PREFIX): str,
+                        vol.Optional(CONF_MQTT_IN): str,
+                        vol.Optional(CONF_MQTT_OUT): str,
                     }
                 ),
             )
